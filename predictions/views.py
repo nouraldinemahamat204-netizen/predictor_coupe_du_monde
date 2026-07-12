@@ -126,9 +126,15 @@ def match_predictor(request):
 
 def page_scenarios(request):
     last_ranking = get_last_ranking()
-    liste_pays = sorted(last_ranking['country_full'].unique())
     
-    context = {'liste_pays': liste_pays, 'resultat_scenario': None}
+    # Préparation de la liste avec les rangs pour le JavaScript
+    liste_pays = last_ranking[['country_full', 'rank']].copy()
+    liste_pays = liste_pays.rename(columns={'country_full': 'name'}).to_dict('records')
+    
+    context = {
+        'liste_pays': liste_pays, 
+        'resultat_scenario': None
+    }
     
     if request.method == "POST":
         eq_a = request.POST.get('scen_equipe_a')
@@ -137,6 +143,7 @@ def page_scenarios(request):
         malus_b = int(request.POST.get('malus_b', 0))
         
         if eq_a and eq_b and eq_a != eq_b:
+            # Récupération des rangs réels
             r_a_base = int(last_ranking[last_ranking['country_full'] == eq_a]['rank'].iloc[0])
             r_b_base = int(last_ranking[last_ranking['country_full'] == eq_b]['rank'].iloc[0])
             
@@ -144,6 +151,7 @@ def page_scenarios(request):
             r_b_futur = r_b_base + malus_b
             
             p_a = predire_match_brut(eq_a, eq_b, r_a_futur, r_b_futur)
+            
             # Simulation Monte Carlo
             tirages = np.random.choice([eq_a, eq_b], size=5000, p=[p_a, 1 - p_a])
             pct_a = (np.sum(tirages == eq_a) / 5000) * 100

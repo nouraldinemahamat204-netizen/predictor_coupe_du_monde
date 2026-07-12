@@ -5,100 +5,132 @@
 
 {% block content %}
 
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+<div class="max-w-4xl mx-auto space-y-10">
 
-        <form method="POST" class="space-y-8">
+    <!-- Formulaire -->
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+        <form method="POST" id="scenario-form">
             {% csrf_token %}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <!-- Équipe A -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Équipe A (Favorite)</label>
-                    <select name="scen_equipe_a" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 text-lg">
+                    <select name="scen_equipe_a" id="equipe_a" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-2xl text-lg">
                         <option value="">Choisir une équipe</option>
                         {% for pays in liste_pays %}
-                        <option value="{{ pays }}">{{ pays }}</option>
+                        <option value="{{ pays.name }}" 
+                                data-rank="{{ pays.rank|floatformat:0 }}"
+                                {% if resultat_scenario and resultat_scenario.eq_a == pays.name %}selected{% endif %}>
+                            {{ pays.name }} — Rang {{ pays.rank|floatformat:0 }}
+                        </option>
                         {% endfor %}
                     </select>
+                    <p id="rank_a" class="mt-2 text-sm text-gray-600 font-medium"></p>
                 </div>
 
                 <!-- Équipe B -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Équipe B</label>
-                    <select name="scen_equipe_b" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 text-lg">
+                    <select name="scen_equipe_b" id="equipe_b" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-2xl text-lg">
                         <option value="">Choisir une équipe</option>
                         {% for pays in liste_pays %}
-                        <option value="{{ pays }}">{{ pays }}</option>
+                        <option value="{{ pays.name }}" 
+                                data-rank="{{ pays.rank|floatformat:0 }}"
+                                {% if resultat_scenario and resultat_scenario.eq_b == pays.name %}selected{% endif %}>
+                            {{ pays.name }} — Rang {{ pays.rank|floatformat:0 }}
+                        </option>
                         {% endfor %}
                     </select>
+                    <p id="rank_b" class="mt-2 text-sm text-gray-600 font-medium"></p>
                 </div>
             </div>
 
-            <!-- Bonus / Malus -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-arrow-up text-green-500"></i> Bonus pour l'Équipe A (places gagnées)
-                    </label>
-                    <input type="number" name="bonus_a" value="0" min="0" max="20"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-emerald-700 mb-2">↑ Bonus pour l'Équipe A</label>
+                    <input type="number" name="bonus_a" id="bonus_a" value="{{ request.POST.bonus_a|default:0 }}" min="0" max="30"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-2xl">
+                    <p id="rang_simule_a" class="mt-2 text-sm text-emerald-600 font-medium"></p>
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-arrow-down text-red-500"></i> Malus pour l'Équipe B (places perdues)
-                    </label>
-                    <input type="number" name="malus_b" value="0" min="0" max="20"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-red-700 mb-2">↓ Malus pour l'Équipe B</label>
+                    <input type="number" name="malus_b" id="malus_b" value="{{ request.POST.malus_b|default:0 }}" min="0" max="30"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-2xl">
+                    <p id="rang_simule_b" class="mt-2 text-sm text-red-600 font-medium"></p>
                 </div>
             </div>
 
-            <div class="flex justify-center">
+            <div class="flex justify-center mt-10">
                 <button type="submit"
-                        class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold text-lg px-12 py-4 rounded-2xl transition-all flex items-center gap-3">
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold text-lg px-14 py-4 rounded-2xl transition-all flex items-center gap-3 shadow-lg">
                     <i class="fas fa-flask"></i>
                     SIMULER LE SCÉNARIO
                 </button>
             </div>
         </form>
+    </div>
 
-        <!-- Résultat du scénario -->
-        {% if resultat_scenario %}
-        <div class="mt-12 border-t pt-10">
-            <div class="text-center mb-8">
-                <h3 class="text-2xl font-bold text-gray-800">Résultat du Scénario</h3>
-                <p class="text-gray-600 mt-1">{{ resultat_scenario.eq_a }} vs {{ resultat_scenario.eq_b }}</p>
+    <!-- RÉSULTAT (plus visible) -->
+    {% if resultat_scenario %}
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-10">
+        <h3 class="text-3xl font-bold text-center mb-10 text-gray-800">Résultat du Scénario</h3>
+        
+        <div class="flex flex-col md:flex-row items-center justify-center gap-16">
+            <div class="text-center">
+                <div class="text-5xl mb-4">{{ resultat_scenario.eq_a }}</div>
+                <div class="text-7xl font-bold text-purple-600">{{ resultat_scenario.pct_a }}%</div>
+                <p class="text-emerald-600 font-medium mt-2">Rang simulé : {{ resultat_scenario.rang_a }}</p>
             </div>
 
-            <div class="flex flex-col md:flex-row items-center justify-center gap-12">
-                <div class="text-center">
-                    <div class="text-5xl mb-3">{{ resultat_scenario.eq_a }}</div>
-                    <div class="text-7xl font-bold text-purple-600">{{ resultat_scenario.pct_a }}%</div>
-                    <p class="text-sm text-gray-500">Victoire simulée (5000 itérations)</p>
-                    <p class="text-xs text-gray-400 mt-2">Rang simulé : {{ resultat_scenario.rang_a }}</p>
-                </div>
+            <div class="text-7xl text-gray-300 font-light">VS</div>
 
-                <div class="text-6xl text-gray-200">VS</div>
-
-                <div class="text-center">
-                    <div class="text-5xl mb-3">{{ resultat_scenario.eq_b }}</div>
-                    <div class="text-7xl font-bold text-red-600">{{ resultat_scenario.pct_b }}%</div>
-                    <p class="text-sm text-gray-500">Victoire simulée</p>
-                    <p class="text-xs text-gray-400 mt-2">Rang simulé : {{ resultat_scenario.rang_b }}</p>
-                </div>
-            </div>
-
-            <div class="mt-10 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">
-                <p class="text-xl font-semibold text-emerald-800">
-                    Vainqueur probable : <span class="text-emerald-900">{{ resultat_scenario.vainqueur }}</span>
-                </p>
+            <div class="text-center">
+                <div class="text-5xl mb-4">{{ resultat_scenario.eq_b }}</div>
+                <div class="text-7xl font-bold text-red-600">{{ resultat_scenario.pct_b }}%</div>
+                <p class="text-red-600 font-medium mt-2">Rang simulé : {{ resultat_scenario.rang_b }}</p>
             </div>
         </div>
-        {% endif %}
 
+        <div class="mt-12 bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
+            <p class="text-2xl font-semibold text-emerald-900">
+                Vainqueur probable : <span class="text-emerald-700">{{ resultat_scenario.vainqueur }}</span>
+            </p>
+        </div>
     </div>
+    {% endif %}
+
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const equipeA = document.getElementById('equipe_a');
+    const equipeB = document.getElementById('equipe_b');
+    const bonusA = document.getElementById('bonus_a');
+    const malusB = document.getElementById('malus_b');
+
+    function updateRanks() {
+        const rankA = parseInt(equipeA.selectedOptions[0]?.getAttribute('data-rank')) || 0;
+        const bonus = parseInt(bonusA.value) || 0;
+        document.getElementById('rank_a').textContent = `Rang actuel : ${rankA}`;
+        document.getElementById('rang_simule_a').textContent = `Rang simulé : ${Math.max(1, rankA - bonus)}`;
+
+        const rankB = parseInt(equipeB.selectedOptions[0]?.getAttribute('data-rank')) || 0;
+        const malus = parseInt(malusB.value) || 0;
+        document.getElementById('rank_b').textContent = `Rang actuel : ${rankB}`;
+        document.getElementById('rang_simule_b').textContent = `Rang simulé : ${rankB + malus}`;
+    }
+
+    equipeA.addEventListener('change', updateRanks);
+    equipeB.addEventListener('change', updateRanks);
+    bonusA.addEventListener('input', updateRanks);
+    malusB.addEventListener('input', updateRanks);
+
+    updateRanks();
+});
+</script>
 
 {% endblock %}
