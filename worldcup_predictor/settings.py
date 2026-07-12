@@ -117,3 +117,5 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = 'staticfiles'  
+ALLOWED_HOSTS = ['.render.com', 'localhost', '127.0.0.1']
+
