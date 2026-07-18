@@ -46,37 +46,49 @@
             </div>
         </form>
 
-        <!-- Résultat -->
-        {% if resultat %}
-        <div class="mt-12 border-t border-gray-100 pt-10">
-            <h3 class="text-center text-xl font-semibold mb-8 text-gray-800">Résultat de la prédiction</h3>
-            
-            <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
-                <!-- Équipe A -->
-                <div class="text-center">
-                    <div class="text-4xl mb-2">{{ resultat.eq_a }}</div>
-                    <div class="text-6xl font-bold text-blue-600">{{ resultat.pct_a }}%</div>
-                    <p class="text-sm text-gray-500 mt-1">Probabilité de victoire</p>
-                </div>
-
-                <div class="text-5xl text-gray-300 font-light">VS</div>
-
-                <!-- Équipe B -->
-                <div class="text-center">
-                    <div class="text-4xl mb-2">{{ resultat.eq_b }}</div>
-                    <div class="text-6xl font-bold text-red-600">{{ resultat.pct_b }}%</div>
-                    <p class="text-sm text-gray-500 mt-1">Probabilité de victoire</p>
-                </div>
+<!-- Résultat -->
+{% if resultat %}
+<div class="mt-12 border-t border-gray-100 pt-10">
+    <h3 class="text-center text-xl font-semibold mb-8 text-gray-800">Résultat de la prédiction</h3>
+    
+    <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+        <!-- Équipe A -->
+        <div class="text-center">
+            <div class="text-4xl mb-2">{{ resultat.eq_a }}</div>
+            <div class="text-6xl font-bold {% if resultat.pct_a > resultat.pct_b %}text-blue-600{% else %}text-gray-400{% endif %}">
+                {{ resultat.pct_a }}%
             </div>
-
-            <div class="mt-10 bg-gray-50 rounded-2xl p-6 text-center">
-                <p class="text-lg">
-                    <strong>{{ resultat.eq_a }}</strong> est <span class="font-semibold text-blue-600">favori</span> 
-                    avec {{ resultat.pct_a }}% de chances de l'emporter.
-                </p>
-            </div>
+            <p class="text-sm text-gray-500 mt-1">Probabilité de victoire</p>
         </div>
+
+        <div class="text-5xl text-gray-300 font-light">VS</div>
+
+        <!-- Équipe B -->
+        <div class="text-center">
+            <div class="text-4xl mb-2">{{ resultat.eq_b }}</div>
+            <div class="text-6xl font-bold {% if resultat.pct_b > resultat.pct_a %}text-red-600{% else %}text-gray-400{% endif %}">
+                {{ resultat.pct_b }}%
+            </div>
+            <p class="text-sm text-gray-500 mt-1">Probabilité de victoire</p>
+        </div>
+    </div>
+
+    <!-- Message du favori (corrigé) -->
+    <div class="mt-10 bg-gray-50 rounded-2xl p-6 text-center">
+        {% if resultat.pct_a > resultat.pct_b %}
+            <p class="text-lg">
+                <strong>{{ resultat.eq_a }}</strong> est <span class="font-semibold text-blue-600">favori</span> 
+                avec {{ resultat.pct_a }}% de chances de l’emporter.
+            </p>
+        {% else %}
+            <p class="text-lg">
+                <strong>{{ resultat.eq_b }}</strong> est <span class="font-semibold text-red-600">favori</span> 
+                avec {{ resultat.pct_b }}% de chances de l’emporter.
+            </p>
         {% endif %}
+    </div>
+</div>
+{% endif %}
 
     </div>
 </div>
